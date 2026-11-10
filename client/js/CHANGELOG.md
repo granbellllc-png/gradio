@@ -1,5 +1,11 @@
 # @gradio/client
 
+## 2.8.0
+
+### Features
+
+- [#14050](https://github.com/gradio-app/gradio/pull/14050) [`fda8037`](https://github.com/gradio-app/gradio/commit/fda8037b83f316454e96201dfad96e50944f8547) - Use the visitor's own HF token for run history buckets.  Thanks @dawoodkhan82!
+
 ## 2.7.2
 
 ### Fixes
