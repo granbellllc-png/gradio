@@ -310,3 +310,26 @@ def test_reverse_proxy():
         server.server_close()
         uvicorn_server.should_exit = True
         uvicorn_thread.join()
+
+
+def test_parse_share_server_address_valid():
+    assert networking.parse_share_server_address("localhost:7000") == ("localhost", 7000)
+    assert networking.parse_share_server_address("127.0.0.1:8080") == ("127.0.0.1", 8080)
+    assert networking.parse_share_server_address("share.example.com:443") == ("share.example.com", 443)
+    assert networking.parse_share_server_address("[::1]:7000") == ("::1", 7000)
+    assert networking.parse_share_server_address("[2001:db8::1]:9000") == ("2001:db8::1", 9000)
+
+
+def test_parse_share_server_address_invalid():
+    import pytest
+
+    with pytest.raises(ValueError, match="Invalid share_server_address format"):
+        networking.parse_share_server_address("invalid_address_without_port")
+    with pytest.raises(ValueError, match="Invalid share_server_address format"):
+        networking.parse_share_server_address("[::1]")
+    with pytest.raises(ValueError, match="Invalid port"):
+        networking.parse_share_server_address("localhost:not_a_number")
+    with pytest.raises(ValueError, match="Invalid port"):
+        networking.parse_share_server_address("localhost:0")
+    with pytest.raises(ValueError, match="Invalid port"):
+        networking.parse_share_server_address("localhost:65536")
