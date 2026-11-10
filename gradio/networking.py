@@ -20,6 +20,33 @@ GRADIO_API_SERVER = "https://api.gradio.app/v3/tunnel-request"
 GRADIO_SHARE_SERVER_ADDRESS = os.getenv("GRADIO_SHARE_SERVER_ADDRESS")
 
 
+def parse_share_server_address(share_server_address: str) -> tuple[str, int]:
+    """Parse and validate share server address supporting host:port and [ipv6]:port."""
+    if share_server_address.startswith("[") and "]" in share_server_address:
+        host_part, _, port_part = share_server_address.partition("]:")
+        remote_host = host_part.lstrip("[")
+        if not port_part:
+            raise ValueError(
+                f"Invalid share_server_address format '{share_server_address}'. Expected '[ipv6_host]:port'."
+            )
+        remote_port_str = port_part
+    elif ":" in share_server_address:
+        remote_host, remote_port_str = share_server_address.rsplit(":", 1)
+    else:
+        raise ValueError(
+            f"Invalid share_server_address format '{share_server_address}'. Expected 'host:port'."
+        )
+    try:
+        remote_port = int(remote_port_str)
+        if not (1 <= remote_port <= 65535):
+            raise ValueError
+    except ValueError:
+        raise ValueError(
+            f"Invalid port '{remote_port_str}' in share_server_address '{share_server_address}'. Port must be an integer between 1 and 65535."
+        )
+    return remote_host, remote_port
+
+
 def setup_tunnel(
     local_host: str,
     local_port: int,
@@ -53,8 +80,7 @@ def setup_tunnel(
         share_server_tls_certificate = CERTIFICATE_PATH
 
     else:
-        remote_host, remote_port = share_server_address.split(":")
-        remote_port = int(remote_port)
+        remote_host, remote_port = parse_share_server_address(share_server_address)
     tunnel = Tunnel(
         remote_host,
         remote_port,
